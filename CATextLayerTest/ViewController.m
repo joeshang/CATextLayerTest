@@ -17,9 +17,10 @@ static CGFloat const kAnimationDuration = 5.0f;
 @interface ViewController ()
 
 @property (nonatomic, strong) CATextLayer *colorTextLayer;
-@property (nonatomic, strong) CATextLayer *maskTextLayer;
-@property (nonatomic, strong) CALayer *topLayer;
+
 @property (nonatomic, strong) CALayer *bottomLayer;
+@property (nonatomic, strong) CALayer *topLayer;
+@property (nonatomic, strong) CATextLayer *maskTextLayer;
 
 @end
 
@@ -30,16 +31,21 @@ static CGFloat const kAnimationDuration = 5.0f;
 - (void)viewDidLoad {
     [super viewDidLoad];
     
+    //初始化图层
     [self p_initLayers];
+    
+    //添加动画效果
     [self p_addAnimationForLayers];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     
+    //网易新闻
     CGPoint center = CGPointMake(roundf(self.view.bounds.size.width / 2), roundf(self.view.bounds.size.height / 4));
     self.colorTextLayer.position = center;
     
+    //歌词
     center.y += roundf(self.view.bounds.size.height / 2);
     self.bottomLayer.position = center;
 }
@@ -54,11 +60,11 @@ static CGFloat const kAnimationDuration = 5.0f;
 - (IBAction)onSliderValueChanged:(id)sender {
     UISlider *slider = (UISlider *)sender;
     
+    //网易新闻
     self.colorTextLayer.timeOffset = slider.value;
-    self.maskTextLayer.timeOffset = slider.value;
     
+    //歌词
     [CATransaction begin];
-    [CATransaction setDisableActions:YES];
     CGRect rect = self.topLayer.frame;
     rect.size.width = roundf(self.bottomLayer.frame.size.width * slider.value / kAnimationDuration);
     self.topLayer.frame = rect;
@@ -68,51 +74,46 @@ static CGFloat const kAnimationDuration = 5.0f;
 #pragma mark - Private
 
 - (void)p_initLayers {
+    //网易新闻
     self.colorTextLayer = [CATextLayer layer];
     self.colorTextLayer.string = @"我会整体变色哦";
     self.colorTextLayer.foregroundColor = [UIColor blackColor].CGColor;
     [self p_commonInitTextLayer:self.colorTextLayer];
     [self.view.layer addSublayer:self.colorTextLayer];
     
-    self.topLayer = [CALayer layer];
-    self.topLayer.backgroundColor = [UIColor blueColor].CGColor;
-    self.topLayer.frame = CGRectMake(0, 0, 0, kLayerHeight);
-    
+    //歌词
     self.bottomLayer = [CALayer layer];
     self.bottomLayer.backgroundColor = [UIColor blackColor].CGColor;
     self.bottomLayer.bounds = CGRectMake(0, 0, kLayerWidth, kLayerHeight);
-    [self.bottomLayer addSublayer:self.topLayer];
     [self.view.layer addSublayer:self.bottomLayer];
+    
+    self.topLayer = [CALayer layer];
+    self.topLayer.backgroundColor = [UIColor blueColor].CGColor;
+    self.topLayer.frame = CGRectMake(0, 0, 0, kLayerHeight);
+    [self.bottomLayer addSublayer:self.topLayer];
     
     self.maskTextLayer = [CATextLayer layer];
     self.maskTextLayer.string = @"我会区域变色哦";
     self.maskTextLayer.foregroundColor = [UIColor whiteColor].CGColor;
     [self p_commonInitTextLayer:self.maskTextLayer];
     self.maskTextLayer.frame = self.bottomLayer.bounds;
+    
+    //设置图层蒙板
     self.bottomLayer.mask = self.maskTextLayer;
 }
 
 - (void)p_addAnimationForLayers {
-    
+    //网易新闻
     CABasicAnimation *colorAnimation = [CABasicAnimation
                                         animationWithKeyPath:@"foregroundColor"];
-    colorAnimation.duration = kAnimationDuration;
-    colorAnimation.fillMode = kCAFillModeForwards;
-    colorAnimation.removedOnCompletion = NO;
     colorAnimation.fromValue = (id)[UIColor blackColor].CGColor;
     colorAnimation.toValue = (id)[UIColor redColor].CGColor;
-    colorAnimation.timingFunction = [CAMediaTimingFunction
-                                     functionWithName:kCAMediaTimingFunctionLinear];
     
     CABasicAnimation *scaleAnimation = [CABasicAnimation
                                         animationWithKeyPath:@"fontSize"];
-    scaleAnimation.duration = kAnimationDuration;
-    scaleAnimation.fillMode = kCAFillModeForwards;
-    scaleAnimation.removedOnCompletion = NO;
     scaleAnimation.fromValue = @(kTextLayerFontSize);
     scaleAnimation.toValue = @(kTextLayerSelectedFontSize);
-    scaleAnimation.timingFunction = [CAMediaTimingFunction
-                                     functionWithName:kCAMediaTimingFunctionLinear];
+    
     CAAnimationGroup *animationGroup = [CAAnimationGroup animation];
     animationGroup.duration = kAnimationDuration;
     animationGroup.timingFunction = [CAMediaTimingFunction
@@ -124,8 +125,7 @@ static CGFloat const kAnimationDuration = 5.0f;
     self.colorTextLayer.speed = 0.0f;
     [self.colorTextLayer addAnimation:animationGroup forKey:@"animateColorAndFontSize"];
     
-    self.maskTextLayer.speed = 0.0f;
-    [self.maskTextLayer addAnimation:scaleAnimation forKey:@"animateFontSize"];
+    //歌词 通过改变frame来完成动画效果
 }
 
 - (void)p_commonInitTextLayer:(CATextLayer *)textLayer {
